@@ -17,5 +17,4 @@ This directory contains following folder
 License
 ----
 
-GPLv2         [GPLv2](https://foobar.org)
-Fujitsu       [Fujitsu GPL](https://foobar.org)
+[Fujitsu GPLv2](https://github.com/FujitsuNetworkCommunications/meta-fss2-linux/blob/master/LICENSE)
