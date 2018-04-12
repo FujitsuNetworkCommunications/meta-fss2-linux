@@ -1,0 +1,174 @@
+# BEGIN - Copy from oe-init-build-env
+# This works in most shells (not dash), but not all of them pass arg1 when
+# being sourced.   To workaround the shell limitation use "set arg1" prior
+# to sourcing this script.
+#
+if [ -n "$BASH_SOURCE" ]; then
+   FSS2OEROOT="`dirname $BASH_SOURCE`"
+elif [ -n "$ZSH_NAME" ]; then
+   FSS2OEROOT="`dirname $0`"
+else
+   FSS2OEROOT="`pwd`"
+fi
+THIS_SCRIPT=$FSS2OEROOT/fss2-init-build-env
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
+   echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'"
+   exit 1
+fi
+
+FSS2OEROOT=`readlink -f "$FSS2OEROOT"`
+# END - Copy from oe-init-build-env
+
+unset -f usage
+unset OPTERR
+unset OPTIND
+unset OPTION
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+
+function usage() {
+cat <<EOF
+usage:
+    source $(basename $BASH_SOURCE) [OPTIONS] [BUILDDIR]
+
+OPTIONS:
+    -s <url>
+      SSTATE mirror e.g., file:///media/sstate-cachce/PATH
+      default: file:///proj/bitbake/poky-cache/sstate-cache/PATH
+EOF
+}
+
+result=0
+
+# Setup default SSTATE_MIRRORS at your site /tmp/bitbake used as example
+SSTATE_MIRRORS="file:///tmp/bitbake/poky-cache/sstate-cache/PATH"
+OPTION=""
+while getopts ":hs:m:" OPTION; do
+    case $OPTION in
+        s)
+            SSTATE_MIRRORS=$OPTARG
+            ;;
+        m)  MACHINE=$OPTARG
+            ;;
+        h)
+            usage
+            result=1
+            ;;
+        \?)
+            usage
+            result=1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -eq 0 ]; then
+  BUILDDIR=${FSS2OEROOT}/build
+else
+  BUILDDIR=${FSS2OEROOT}/$1
+fi
+
+source ${FSS2OEROOT}/oe-init-build-env ${BUILDDIR}
+
+# Assume native compiler doesn't require LD_LIBRARY_PATH to work
+# except in known broken FSS2 RHEL 6.4 setup.
+if [ -d /local/gcc -a ! -f /etc/oracle-release ]; then
+  export BB_ENV_EXTRAWHITE="LD_LIBRARY_PATH ${BB_ENV_EXTRAWHITE}"
+fi
+
+local_conf_fname="conf/local.conf"
+local_conf_patch="conf/.patch.local.conf"
+if [ ! -f "$local_conf_fname" ] ; then
+  echo "ERROR: local conf file \"$local_conf_fname\" is not there"
+  result=1
+fi
+
+bblayers_conf_fname="conf/bblayers.conf"
+bblayers_conf_patch="conf/.patch.bblayers.conf"
+if [ ! -f "$bblayers_conf_fname" ] ; then
+  echo "ERROR: bblayers conf file \"$bblayers_conf_fname\" is not there"
+  result=1
+fi
+
+if [ $result -eq 0 ] ; then
+  bld_dir=$(pwd)
+  cd ${FSS2OEROOT}
+  patches_done_fname=".fss2-init-bild-env.patches"
+  if [ ! -f "$patches_done_fname" ] ; then
+    echo "*** apply patches"
+    git apply patches/*
+    touch "$patches_done_fname"
+  fi
+  cd $bld_dir
+fi
+
+if [ $result -eq 0 ] ; then
+
+  if [ ! -f "$local_conf_patch" ] ; then
+    echo "" >> $local_conf_fname
+    echo "# FSS2 Updates after this point" >> $local_conf_fname
+
+    # This points to a sstate-cache outside build directory so that newly
+    # build directories will build much faster.
+    sstate_dir="/tmp/bitbake/poky-cache/sstate-cache"
+    echo "*** Setting Shared State Cache to ${sstate_dir}"
+    echo "SSTATE_MIRRORS ?= \"file://.* ${SSTATE_MIRRORS}\"" >> $local_conf_fname
+
+    # This directory is checked first for source code downloaded before
+    # going to the net and this shares downloads between build directories
+    # or recreating build directories.
+    dl_dir="/tmp/bitbake/poky-cache/downloads"
+    echo "*** Setting Source Download Mirror to ${dl_dir}"
+    echo "SOURCE_MIRROR_URL ?= \"file://${dl_dir}\"" >> $local_conf_fname
+    echo "INHERIT += \"own-mirrors\"" >> $local_conf_fname
+
+    echo "*** Setting machine to ${MACHINE:-qemux86-64}"
+    echo "MACHINE ?= \"${MACHINE:-qemux86-64}\"" >> $local_conf_fname
+
+    touch "$local_conf_patch"
+
+    echo "*** Modifying threads and load limits"
+    sed -i -e "s|^BB_NUMBER_THREADS.*|BB_NUMBER_THREADS \?= \"$\{@min\(\[oe.utils.cpu_count\(\), 16\]\)\}\"|" $local_conf_fname
+    sed -i -e "s|^PARALLEL_MAKE.*|PARALLEL_MAKE \?= \"-l $\{@int\(oe.utils.cpu_count\(\) * 150/100\)\} -j $\{@min\(\[oe.utils.cpu_count\(\), 16\]\)\}\"|" $local_conf_fname
+
+    # Assume native compiler doesn't require LD_LIBRARY_PATH to work
+    # except in known broken FSS2 RHEL 6.4 setup.
+    if [ -d /local/gcc -a ! -f /etc/oracle-release ]; then
+      echo "*** Info: Adding LD_LIBRARY_PATH to exported variables."
+      echo "export LD_LIBRARY_PATH" >> $local_conf_fname
+      echo "BB_HASHBASE_WHITELIST_append = \" LD_LIBRARY_PATH\"" >> $local_conf_fname
+    fi
+
+  fi
+
+  tmppath="$(find ../meta* -name $MACHINE.conf)"
+  echo "*** $MACHINE.conf found in $tmppath ***"
+
+  # 
+  ARCH=""
+  case $tmppath in
+
+    ## all powerpc architecture
+    *meta-fss2-ppc* ) 
+    if [ ! -f "$bblayers_conf_patch" ] ; then
+      echo "*** Adding FSS2 ppc layers to $bblayers_conf_fname"
+      sed -i -e '/.*meta-yocto .*/i\'"  ${FSS2OEROOT}/meta-fsl-ppc \\\\\n  ${FSS2OEROOT}/meta-fss2-ppc \\\\" $bblayers_conf_fname
+      touch "$bblayers_conf_patch"
+    fi
+      ARCH=ppc ;;
+
+    ## picks qemu by default
+    *)
+      ARCH=qemu
+  esac
+ 
+fi
+if [ $result -ne 0 ] ; then
+  echo ""
+  echo "ERROR: aborting"
+  echo ""
+  cd $saved_dir
+fi
