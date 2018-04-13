@@ -18,3 +18,9 @@ License
 ----
 
 [GPLv2](https://github.com/FujitsuNetworkCommunications/meta-fss2-linux/blob/master/LICENSE.md)
+
+## Maintainers 
+
+Dan Berger  @drberger
+Rajeev Shekar @rshekarfnc
+David T @dwterwil
