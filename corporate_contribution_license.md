@@ -4,7 +4,7 @@ Corporate Contributor License Agreement2 ("Agreement")
    Thank you for your interest in the meta-fss-linux2, software created by Fujitsu Network Communications, Inc. (“FNC”). In order to clarify the    intellectual property license granted with Contributions from any person    or entity, FNC must have a Contributor License Agreement (CLA)    on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a    Contributor as well as the protection of FNC and its users; it     does not change your rights to use your own Contributions for any other    purpose.  
    This version of the Agreement allows an entity (the "Corporation") to    submit Contributions to FNC, to authorize Contributions     submitted by its designated employees to FNC, and to grant     copyright and patent licenses thereto. 
  
-   If you have not already done so, please complete and sign, then scan and    email a pdf file of this Agreement to <contact_email_id>    Please read this document carefully before signing and keep a copy for    your records. 
+   If you have not already done so, please complete and sign, then scan and    email a pdf file of this Agreement to karan.marjara@us.fujitsu.com    Please read this document carefully before signing and keep a copy for    your records. 
  
    Corporation name:    ________________________________________________ 
  
