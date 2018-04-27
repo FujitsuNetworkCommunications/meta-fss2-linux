@@ -144,7 +144,7 @@ if [ $result -eq 0 ] ; then
 
   fi
 
-  tmppath="$(find ../meta* -name $MACHINE.conf)"
+  tmppath="$(find -L ../meta* -name $MACHINE.conf)"
   echo "*** $MACHINE.conf found in $tmppath ***"
 
   # 
