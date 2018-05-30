@@ -98,8 +98,9 @@ if [ $result -eq 0 ] ; then
   cd ${FSS2OEROOT}
   patches_done_fname=".fss2-init-bild-env.patches"
   if [ ! -f "$patches_done_fname" ] ; then
-    echo "*** apply patches"
-    git apply patches/*
+    echo "*** applying patches..."
+    git apply patches/*.patch
+    echo "*** done applying patches..."
     touch "$patches_done_fname"
   fi
   cd $bld_dir
