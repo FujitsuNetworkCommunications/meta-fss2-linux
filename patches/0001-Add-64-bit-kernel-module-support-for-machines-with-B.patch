@@ -1,0 +1,39 @@
+From edbcbb3dcea491ebea730a95a05629ae8263cfad Mon Sep 17 00:00:00 2001
+From: Rajeev Shekar <rajeev.shekar@us.fujitsu.com>
+Date: Wed, 30 May 2018 13:56:17 -0500
+Subject: [PATCH] Add 64 bit kernel module support for machines with
+ BUILD_64BIT_KERNEL variable set
+
+---
+ meta/classes/module.bbclass | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/meta/classes/module.bbclass b/meta/classes/module.bbclass
+index ad6f7af..2582600 100644
+--- a/meta/classes/module.bbclass
++++ b/meta/classes/module.bbclass
+@@ -2,6 +2,21 @@ DEPENDS += "virtual/kernel"
+ 
+ inherit module-base kernel-module-split
+ 
++python () {
++
++        promote_kernel = d.getVar('BUILD_64BIT_KERNEL')
++
++        if promote_kernel == "1":
++                d.appendVar('KERNEL_CC', ' -m64')
++                d.appendVar('KERNEL_LD', ' -melf64ppc')
++
++
++        error_qa = d.getVar('ERROR_QA', True)
++        if 'arch' in error_qa:
++            d.setVar('ERROR_QA', error_qa.replace(' arch', ''))
++
++}
++
+ addtask make_scripts after do_patch before do_compile
+ do_make_scripts[lockfiles] = "${TMPDIR}/kernel-scripts.lock"
+ do_make_scripts[deptask] = "do_populate_sysroot"
+-- 
+1.8.3.1
+
