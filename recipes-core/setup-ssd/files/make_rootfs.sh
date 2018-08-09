@@ -1,5 +1,36 @@
 #!/bin/sh
 
+found=0
+echo "try to find file *.tar.gz"
+file_list=$(ls /mnt/usb/T600/*.tar.gz)
+for file_name in ${file_list}
+do
+    echo "find a file "${file_name}
+    found=1
+    break;
+done
+
+if [ "${found}" != "1" ]
+then
+    echo "try to find file *.PGM"
+    file_list=$(ls /mnt/usb/T600/*.PGM)
+    for file_name in ${file_list}
+    do
+        echo "find a file "${file_name}
+        found=1
+        break;
+    done
+
+fi
+
+if [ "${found}" != "1" ]
+then
+    echo "There is no any *.tar.gz and *.PGM files in the USB."
+    echo "Stop procedure"
+    exit 0
+fi
+
+
 echo "Start to copy files to bank 1"
 mkdir /mnt/ssd1
 mount /dev/sda1 /mnt/ssd1
@@ -15,13 +46,9 @@ cp /mnt/usb/T600/fp01.bin boot/ucnt
 #shall be remove
 cp /mnt/usb/T600/fp01.bin .
 
-cp /mnt/usb/T600/core-image-minimal-t600.rootfs.tar.gz .
-tar zxf core-image-minimal-t600.rootfs.tar.gz
+tar zxf ${file_name} -C /mnt/ssd1
 sync
 sleep 1
-echo "Remove file core-image-minimal"
-rm core-image-minimal-t600.rootfs.tar.gz
-sync
 
 echo "Umount sda5, sda9 and sda1 "
 cd ..
@@ -60,13 +87,9 @@ cp /mnt/usb/T600/fp01.bin boot/ucnt/
 #shall be remove
 cp /mnt/usb/T600/fp01.bin .
 
-cp /mnt/usb/T600/core-image-minimal-t600.rootfs.tar.gz .
-tar zxf core-image-minimal-t600.rootfs.tar.gz
+tar zxf ${file_name} -C /mnt/ssd2
 sync
 sleep 1
-echo "Remove file core-image-minimal"
-rm core-image-minimal-t600.rootfs.tar.gz
-sync
 
 echo "Umount sda6, sda9 and sda2 "
 cd ..
