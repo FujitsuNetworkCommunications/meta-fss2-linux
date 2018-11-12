@@ -1,0 +1,32 @@
+
+# HG changeset patch
+# User Torbjorn Granlund <tege@gmplib.org>
+# Date 1361030826 -3600
+# Node ID f43533b76282a90b4988a2306a4411477a4ac9c5
+# Parent  a93ba156443685b36dc4c496e0b67484b323198c
+(PROTECT): Emit '.hidden' instead of '.protected" to please Sun's assembler, but also for semantic reasons.
+
+diff -r a93ba1564436 -r f43533b76282 mpn/x86_64/x86_64-defs.m4
+--- a/mpn/x86_64/x86_64-defs.m4	Fri Feb 15 16:59:27 2013 +0100
++++ b/mpn/x86_64/x86_64-defs.m4	Sat Feb 16 17:07:06 2013 +0100
+@@ -2,8 +2,8 @@
+ 
+ dnl  m4 macros for amd64 assembler.
+ 
+-dnl  Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009, 2011, 2012
+-dnl  Free Software Foundation, Inc.
++dnl  Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009, 2011,
++dnl  2012, 2013 Free Software Foundation, Inc.
+ dnl
+ dnl  This file is part of the GNU MP Library.
+ dnl
+@@ -218,7 +218,7 @@
+ dnl  This can save reloc entries and improve shlib sharing as well as
+ dnl  application startup times
+ 
+-define(`PROTECT',  `.protected $1')
++define(`PROTECT',  `.hidden $1')
+ 
+ 
+ dnl  Usage: x86_lookup(target, key,value, key,value, ...)
+
