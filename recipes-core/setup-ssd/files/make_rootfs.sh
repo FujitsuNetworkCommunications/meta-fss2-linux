@@ -1,5 +1,38 @@
 #!/bin/sh
 
+found=0
+is_pgm=0
+echo "try to find file *.tar.gz"
+file_list=$(ls /mnt/usb/T600/*.tar.gz)
+for file_name in ${file_list}
+do
+    echo "find a file "${file_name}
+    found=1
+    break;
+done
+
+if [ "${found}" != "1" ]
+then
+    echo "try to find file *.PGM"
+    file_list=$(ls /mnt/usb/T600/*.PGM)
+    for file_name in ${file_list}
+    do
+        echo "find a file "${file_name}
+        found=1
+        is_pgm=1
+        break;
+    done
+
+fi
+
+if [ "${found}" != "1" ]
+then
+    echo "There is no any *.tar.gz and *.PGM files in the USB."
+    echo "Stop procedure"
+    exit 0
+fi
+
+
 echo "Start to copy files to bank 1"
 mkdir /mnt/ssd1
 mount /dev/sda1 /mnt/ssd1
@@ -15,12 +48,38 @@ cp /mnt/usb/T600/fp01.bin boot/ucnt
 #shall be remove
 cp /mnt/usb/T600/fp01.bin .
 
-cp /mnt/usb/T600/core-image-minimal-t600.rootfs.tar.gz .
-tar zxf core-image-minimal-t600.rootfs.tar.gz
+tar zxf ${file_name} -C /mnt/ssd1
 sync
 sleep 1
-echo "Remove file core-image-minimal"
-rm core-image-minimal-t600.rootfs.tar.gz
+
+if [ "${is_pgm}" = "1" ]
+then
+    found=0
+
+    file_list=$(ls /mnt/ssd1/*.tar.gz)
+    for real_file_name in ${file_list}
+    do
+        echo "find a file "${real_file_name}
+        found=1
+        break;
+    done
+
+    if [ "${found}" != "1" ]
+    then
+        echo "There is no any *.tar.gz file in thg *.PGM."
+        echo "Stop procedure"
+        exit 0
+    fi
+
+    tar zxf ${real_file_name} -C .
+    sync
+    sleep 1
+fi
+
+cd boot
+ln -f -s uImage-3.12.19-rt30-4.0_2+g6619b8b uImage-t600.bin
+ln -f -s t600.dtb uImage-t600.dtb
+cd ..
 sync
 
 echo "Umount sda5, sda9 and sda1 "
@@ -60,12 +119,38 @@ cp /mnt/usb/T600/fp01.bin boot/ucnt/
 #shall be remove
 cp /mnt/usb/T600/fp01.bin .
 
-cp /mnt/usb/T600/core-image-minimal-t600.rootfs.tar.gz .
-tar zxf core-image-minimal-t600.rootfs.tar.gz
+tar zxf ${file_name} -C /mnt/ssd2
 sync
 sleep 1
-echo "Remove file core-image-minimal"
-rm core-image-minimal-t600.rootfs.tar.gz
+
+if [ "${is_pgm}" = "1" ]
+then
+    found=0
+
+    file_list=$(ls /mnt/ssd2/*.tar.gz)
+    for real_file_name in ${file_list}
+    do
+        echo "find a file "${real_file_name}
+        found=1
+        break;
+    done
+
+    if [ "${found}" != "1" ]
+    then
+        echo "There is no any *.tar.gz file in thg *.PGM."
+        echo "Stop procedure"
+        exit 0
+    fi
+
+    tar zxf ${real_file_name} -C .
+    sync
+    sleep 1
+fi
+
+cd boot
+ln -f -s uImage-3.12.19-rt30-4.0_2+g6619b8b uImage-t600.bin
+ln -f -s t600.dtb uImage-t600.dtb
+cd ..
 sync
 
 echo "Umount sda6, sda9 and sda2 "
@@ -91,4 +176,3 @@ sleep 1
 umount /dev/sda2
 
 echo "Done"
-
