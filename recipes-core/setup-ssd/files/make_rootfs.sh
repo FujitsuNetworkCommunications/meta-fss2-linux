@@ -76,12 +76,6 @@ then
     sleep 1
 fi
 
-cd boot
-ln -f -s uImage-3.12.19-rt30-4.0_2+g6619b8b uImage-t600.bin
-ln -f -s t600.dtb uImage-t600.dtb
-cd ..
-sync
-
 echo "Umount sda5, sda9 and sda1 "
 cd ..
 umount /dev/sda5
@@ -146,12 +140,6 @@ then
     sync
     sleep 1
 fi
-
-cd boot
-ln -f -s uImage-3.12.19-rt30-4.0_2+g6619b8b uImage-t600.bin
-ln -f -s t600.dtb uImage-t600.dtb
-cd ..
-sync
 
 echo "Umount sda6, sda9 and sda2 "
 cd ..
