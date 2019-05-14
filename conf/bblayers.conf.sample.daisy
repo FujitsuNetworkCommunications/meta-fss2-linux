@@ -1,6 +1,6 @@
-# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
 # changes incompatibly
-POKY_BBLAYERS_CONF_VERSION = "2"
+LCONF_VERSION = "6"
 
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""

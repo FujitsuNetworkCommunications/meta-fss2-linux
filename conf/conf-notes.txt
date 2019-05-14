@@ -1,6 +1,4 @@
 Common targets are:
-    fss2-image-minimal
     core-image-minimal
 
-You can also run generated qemu images with a command like 'runqemu qemuppc'
-
+You can also run generated qemu images with a command like 'runqemu qemux86-64'

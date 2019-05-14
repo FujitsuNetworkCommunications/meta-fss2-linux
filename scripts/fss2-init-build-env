@@ -1,0 +1,164 @@
+# BEGIN - Copy from oe-init-build-env
+# This works in most shells (not dash), but not all of them pass arg1 when
+# being sourced.   To workaround the shell limitation use "set arg1" prior
+# to sourcing this script.
+#
+if [ -n "$BASH_SOURCE" ]; then
+   FSS2OEROOT="`dirname $BASH_SOURCE`"
+elif [ -n "$ZSH_NAME" ]; then
+   FSS2OEROOT="`dirname $0`"
+else
+   FSS2OEROOT="`pwd`"
+fi
+THIS_SCRIPT=$FSS2OEROOT/fss2-init-build-env
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
+   echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'"
+   exit 1
+fi
+
+FSS2OEROOT=`readlink -f "$FSS2OEROOT"`
+# END - Copy from oe-init-build-env
+
+unset -f usage
+unset OPTERR
+unset OPTIND
+unset OPTION
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+
+function usage() {
+cat <<EOF
+usage:
+    source $(basename $BASH_SOURCE) [OPTIONS] [BUILDDIR]
+
+OPTIONS:
+    -s <url>
+      SSTATE mirror e.g., file:///tmp/sstate-cache/PATH
+      default: file:///tmp/sstate-cache/PATH
+EOF
+}
+
+result=0
+
+sstate_mirrors="${SSTATE_MIRRORS:-file:///tmp/sstate-cache/PATH}"
+machine="${MACHINE:-qemux86-64}"
+OPTION=""
+while getopts ":hs:m:" OPTION; do
+    case $OPTION in
+        s)
+            sstate_mirrors=$OPTARG
+            ;;
+        m)  machine=$OPTARG
+            machine_path="$(find ${FSS2OEROOT}/meta* -name ${machine}.conf)"
+            if [ "${machine_path}x" = "x" ]; then
+              echo "ERROR: MACHINE type ${machine} not found."
+              return
+            fi
+            echo "*** $machine.conf found in $machine_path ***"
+            ;;
+        h)
+            usage
+            result=1
+            ;;
+        \?)
+            usage
+            result=1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -eq 0 ]; then
+  BUILDDIR=${FSS2OEROOT}/build
+else
+  BUILDDIR=${FSS2OEROOT}/$1
+fi
+
+source ${FSS2OEROOT}/oe-init-build-env ${BUILDDIR}
+
+local_conf_fname="conf/local.conf"
+local_conf_patch="conf/.patch.local.conf"
+if [ ! -f "$local_conf_fname" ] ; then
+  echo "ERROR: local conf file \"$local_conf_fname\" is not there"
+  result=1
+fi
+
+bblayers_conf_fname="conf/bblayers.conf"
+bblayers_conf_patch="conf/.patch.bblayers.conf"
+if [ ! -f "$bblayers_conf_fname" ] ; then
+  echo "ERROR: bblayers conf file \"$bblayers_conf_fname\" is not there"
+  result=1
+fi
+
+if [ $result -eq 0 ] ; then
+  bld_dir=$(pwd)
+  cd ${FSS2OEROOT}
+  patches_done_fname=".fss2-init-bild-env.patches"
+  if [ ! -f "$patches_done_fname" ] ; then
+    # Skip  applying patches if no directory found.
+    if [ -w patches -o -h patches ]; then
+      echo "*** apply patches"
+      git apply patches/*.patch
+    fi
+    touch "$patches_done_fname"
+  fi
+  cd $bld_dir
+fi
+
+if [ $result -eq 0 ] ; then
+
+  if [ ! -f "$local_conf_patch" ] ; then
+    echo "" >> $local_conf_fname
+    echo "# FSS2 Updates after this point" >> $local_conf_fname
+
+    if [ "${sstate_mirrors}x" != "x" ]; then
+      # This points to a sstate-cache outside build directory so that newly
+      # build directories will build much faster.
+      echo "*** Setting Shared State Cache to ${sstate_mirrors}"
+      echo "SSTATE_MIRRORS ?= \"file://.* ${sstate_mirrors}\"" >> $local_conf_fname
+    fi
+
+    echo "*** Setting machine to ${machine}"
+    echo "MACHINE ?= \"${machine}\"" >> $local_conf_fname
+
+    touch "$local_conf_patch"
+
+  fi
+
+  if [ ! -f "$bblayers_conf_patch" ] ; then
+
+    case $machine_path in
+      ## Freescale BSP MACHINE
+      *meta-freescale* )
+      echo "*** Adding Freescale layers to $bblayers_conf_fname"
+      sed -i -e '/.*meta-fss2-linux .*/i\'"  ${FSS2OEROOT}/meta-freescale \\\\" $bblayers_conf_fname
+      ;;
+
+      ## FSS2 ppc MACHINE
+      *meta-fss2-ppc* )
+      echo "*** Adding FSS2 ppc layers to $bblayers_conf_fname"
+      sed -i -e '/.*meta-fss2-linux .*/i\'"  ${FSS2OEROOT}/meta-freescale \\\\\n  ${FSS2OEROOT}/meta-fss2-ppc \\\\" $bblayers_conf_fname
+      ;;
+
+      ## picks qemu by default
+      *)
+      ;;
+    esac
+
+    touch "$bblayers_conf_patch"
+  fi
+
+fi
+
+unset sstate_mirrors
+unset machine
+
+if [ $result -ne 0 ] ; then
+  echo ""
+  echo "ERROR: aborting"
+  echo ""
+  cd $saved_dir
+fi
