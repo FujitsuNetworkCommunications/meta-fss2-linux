@@ -111,6 +111,10 @@ fi
 if [ $result -eq 0 ] ; then
 
   if [ ! -f "$local_conf_patch" ] ; then
+    # Since not using TEMPLATECONF concept, it is common for file
+    # permissions to get lost when overwriting meta-poky/conf/local.conf.sample.
+    # Improve reliability by making sure writes will work.
+    chmod u+w $local_conf_fname
     echo "" >> $local_conf_fname
     echo "# FSS2 Updates after this point" >> $local_conf_fname
 
