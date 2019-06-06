@@ -13,11 +13,11 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 SRC_URI = "git://github.com/grpc/grpc.git;protocol=git;branch=v1.6.x \
            file://0001-Fix-grpc-makefile.patch"
 SRCREV = "4ac92c69a4716a83c36718b712b75e3d6e168d92"
-PR = "r1"
+PR = "r2"
 
 S = "${WORKDIR}/git"
 
-inherit autotools
+inherit autotools-brokensep
 
 # GRPC has no do_configure as it is not a true autotools recipe
 do_configure() {
@@ -29,6 +29,10 @@ do_compile() {
 
 do_install() {
   oe_runmake 'prefix=${D}${prefix}' install
+}
+
+do_install_append_class-native() {
+  ln -sr ${D}${libdir}/libgrpc++.so.1.6.6 ${D}${libdir}/libgrpc++.so.1
 }
 
 SHARED_MAKE_ARGS = "  HAS_SYSTEM_PROTOBUF=true HAS_VALID_PROTOC=true HAS_PROTOC=true AR='${AR} rcs' LD='${CXX}' LDXX='${CXX}' "
