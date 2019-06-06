@@ -13,17 +13,17 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=35953c752efc9299b184f91bef540095"
 
 SRC_URI = "git://github.com/google/protobuf.git"
 SRCREV = "b04e5cba356212e4e8c66c61bbe0c3a20537c5b9"
-PR = "r1"
+PR = "r2"
 
 S = "${WORKDIR}/git"
 
 EXTRA_OECONF += " --with-protoc=echo"
 
-inherit autotools
+inherit autotools-brokensep
 
 do_install_append() {
     install -m 0755 ${S}/src/.libs/libprotoc.so.14.0.0 ${D}${libdir}
-    rm ${D}${libdir}/*.a ${D}${libdir}/*.la
+    rm ${D}${libdir}/*.la
 }
 
 BBCLASSEXTEND = "native nativesdk"
