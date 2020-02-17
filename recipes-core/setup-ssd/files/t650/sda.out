@@ -1,0 +1,13 @@
+# partition table of /dev/sda
+unit: sectors
+
+/dev/sda1 : start=     2048, size= 10485760, Id=83
+/dev/sda2 : start= 10487808, size= 10485760, Id=83
+/dev/sda3 : start= 20973568, size= 40892416, Id= 5
+/dev/sda4 : start=        0, size=        0, Id= 0
+/dev/sda5 : start= 20975616, size=   409600, Id=83
+/dev/sda6 : start= 21387264, size=   409600, Id=83
+/dev/sda7 : start= 21798912, size=   614400, Id=83
+/dev/sda8 : start= 22415360, size= 37748736, Id=83
+/dev/sda9 : start= 60166144, size=   409600, Id=83
+
