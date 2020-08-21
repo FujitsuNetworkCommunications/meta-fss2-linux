@@ -1,0 +1,11 @@
+[Unit]
+Description=service to start cma-alloc-driver
+After=psi_phaseI.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/fnc/cma-alloc-driver/cma-alloc-driver-installer.sh
+SuccessExitStatus=0
+
+[Install]
+WantedBy=basic.target
